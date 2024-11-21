@@ -1,0 +1,34 @@
+{
+  "name": "lexisother/composer-patches-regex",
+  "type": "composer-plugin",
+  "version": "1.0.0",
+  "require": {
+    "php": ">=8.0.0",
+    "composer-plugin-api": "^2.0",
+    "cweagans/composer-patches": "dev-main#5269693119b245e273db052f12ab23d74aca26fc"
+  },
+  "require-dev": {
+    "composer/composer": "^2.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "lexisother\\Composer\\": "src"
+    }
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/cweagans/composer-patches.git"
+    }
+  ],
+  "extra": {
+    "class": "lexisother\\Composer\\Plugin",
+    "plugin-modifies-downloads": true,
+    "plugin-modifies-install-path": true
+  },
+  "config": {
+    "allow-plugins": {
+      "cweagans/composer-patches": false
+    }
+  }
+}
