@@ -24,6 +24,8 @@ class RegexPatcher extends PatcherBase
             return false;
         }
 
+        // TODO: Implement $regexOptions['fromUrl'] to fetch a remotely hosted patchset and process that instead
+
         $errors = [];
         foreach ($regexOptions as $file => $patches) {
             $errors[$file] = [];
