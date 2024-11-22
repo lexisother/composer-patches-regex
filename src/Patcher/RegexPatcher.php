@@ -10,24 +10,41 @@ use cweagans\Composer\Patcher\PatcherBase;
 
 class RegexPatcher extends PatcherBase
 {
+    public array $options;
     public bool $__REGEXPATCHER__ = true;
 
     public function apply(Patch $patch, string $path): bool
     {
-        $regexOptions = $patch->extra['regex'];
+        $this->options = $regexOptions = $patch->extra['regex'];
         if (empty($regexOptions)) {
-            $this->io->write(
-                'Required configuration for RegexPatcher not present. Skipping.',
-                true,
-                IOInterface::VERBOSE
-            );
-            return false;
+            return $this->failWithReason('Required configuration for RegexPatcher not present. Skipping.');
         }
 
-        // TODO: Implement $regexOptions['fromUrl'] to fetch a remotely hosted patchset and process that instead
+        if (isset($regexOptions['fromUrl']) && $regexOptions['fromUrl']) {
+            $patchesJson = json_decode(file_get_contents($patch->localPath), true);
+            return $this->processPatches($patchesJson, $path);
+        } else {
+            if (!isset($regexOptions['files'])) {
+                return $this->failWithReason("RegexPatcher option fromUrl not present or false, but no files key present. Skipping.");
+            }
 
+            return $this->processPatches($regexOptions['files'], $path);
+        }
+    }
+
+    public function canUse(): bool
+    {
+        // Hardcoded to true because we're using regular PHP functionality for patching.
+        return true;
+    }
+
+    private function processPatches(array $patchFiles, string $path): bool
+    {
         $errors = [];
-        foreach ($regexOptions as $file => $patches) {
+        foreach ($patchFiles as $file => $patches) {
+            // In case this is present but false
+            if ($file === "fromUrl") continue;
+
             $errors[$file] = [];
 
             foreach ($patches as $i => $patch) {
@@ -64,12 +81,12 @@ class RegexPatcher extends PatcherBase
             }
         }
 
-
         $wereThereErrors = false;
         if (count($errors) > 0) {
             foreach ($errors as $file => $fileErrors) {
                 if (count($fileErrors) > 0) {
-                    $wereThereErrors = true;
+                    if (!isset($this->options['ignoreErrors']) || !$this->options['ignoreErrors'])
+                        $wereThereErrors = true;
 
                     $this->io->error("      - Errors in $file:");
                     foreach ($fileErrors as $error) {
@@ -82,9 +99,13 @@ class RegexPatcher extends PatcherBase
         return !$wereThereErrors;
     }
 
-    public function canUse(): bool
+    private function failWithReason(string $reason)
     {
-        // Hardcoded to true because we're using regular PHP functionality for patching.
-        return true;
+        $this->io->write(
+            $reason,
+            true,
+            IOInterface::VERBOSE
+        );
+        return false;
     }
 }
