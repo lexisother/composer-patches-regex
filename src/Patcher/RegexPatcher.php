@@ -44,9 +44,8 @@ class RegexPatcher extends PatcherBase
 
                 $contents = file_get_contents("$path/$file");
 
-                $matcher = $limit === -1 ? preg_match_all(...) : preg_match(...);
-                $found = $matcher($patch['find'], $contents);
-                if ($found !== 1) {
+                $found = preg_match_all($patch['find'], $contents);
+                if ($found === 0) {
                     $errors[$file][] = "Find of patch $i found nothing.";
                 }
 
@@ -55,8 +54,9 @@ class RegexPatcher extends PatcherBase
                     $errors[$file][] = "Replacement of patch $i returned null.";
                 }
 
+                // TODO: Compose all changes and write only once
                 if (count($errors[$file]) === 0) {
-                    $this->io->write("      - Writing out <info>$file</info>");
+                    $this->io->write("      - Writing out <info>$file</info> (patch $i)");
                     file_put_contents("$path/$file", $contents);
                 }
             }
