@@ -10,12 +10,12 @@ use cweagans\Composer\Patcher\PatcherBase;
 
 class RegexPatcher extends PatcherBase
 {
-    public array $options;
+    public array|null $options;
     public bool $__REGEXPATCHER__ = true;
 
     public function apply(Patch $patch, string $path): bool
     {
-        $this->options = $regexOptions = $patch->extra['regex'];
+        $this->options = $regexOptions = array_key_exists('regex', $patch->extra) ? $patch->extra['regex'] : null;
         if (empty($regexOptions)) {
             return $this->failWithReason('Required configuration for RegexPatcher not present. Skipping.');
         }
